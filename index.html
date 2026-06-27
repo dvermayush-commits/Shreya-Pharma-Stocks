@@ -6,7 +6,7 @@
     <title>SHREYA PHARMA - Enterprise ERP</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
     <div class="bg-shape shape-1"></div>
@@ -61,8 +61,11 @@
                         <div class="glass-card mb-3">
                             <div class="grid-4 align-end">
                                 <div class="input-box" style="grid-column: span 2;">
-                                    <label>Search Medicine (Pack Size in Brackets)</label>
-                                    <select id="billItem" onchange="autoFillDetails()"></select>
+                                    <label>Search & Select Medicine</label>
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" id="posSearch" placeholder="🔍 Search..." onkeyup="updateUI()" style="width: 35%; margin: 0;">
+                                        <select id="billItem" onchange="autoFillDetails()" style="width: 65%; margin: 0;"></select>
+                                    </div>
                                 </div>
                                 <div class="input-box"><label>N.MRP (₹)</label><input type="text" id="billMrp" class="readonly-input" readonly></div>
                                 <div class="input-box"><label>Default Rate</label><input type="text" id="billRealRate" class="readonly-input" readonly></div>
@@ -107,8 +110,11 @@
             <section id="inventoryTab" class="view-section">
                 <div class="glass-card mb-4">
                     <div class="flex-between mb-3">
-                        <h2 class="page-title" style="font-size: 20px;" id="formTitle">Add / Modify Medicine Database</h2>
-                        <button class="btn btn-primary" onclick="toggleInventoryForm()"><i class="fa-solid fa-folder-plus"></i> Toggle Form</button>
+                        <h2 class="page-title" style="font-size: 20px;" id="formTitle">Master Inventory</h2>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <input type="text" id="invSearch" placeholder="🔍 Search Medicine..." onkeyup="updateUI()" style="padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 280px; outline: none;">
+                            <button class="btn btn-primary" onclick="toggleInventoryForm()"><i class="fa-solid fa-folder-plus"></i> Add New</button>
+                        </div>
                     </div>
                     
                     <div id="newMedicineForm" class="hidden-panel pt-3 border-top">
@@ -176,10 +182,12 @@
                 <div class="grid-2">
                     <div class="glass-card text-center p-4">
                         <h3><i class="fa-solid fa-download" style="color: var(--accent);"></i> Backup Data</h3>
+                        <p class="mt-2 text-muted">Download current JSON data.</p>
                         <button class="btn btn-success mt-4 w-100" onclick="exportData()"><i class="fa-solid fa-file-export"></i> Download File</button>
                     </div>
                     <div class="glass-card text-center p-4">
                         <h3><i class="fa-solid fa-upload" style="color: var(--secondary);"></i> Restore Data</h3>
+                        <p class="mt-2 text-muted">Upload old JSON file.</p>
                         <input type="file" id="importFile" accept=".json" class="mt-4 w-100 p-2" style="border:1px solid #ccc; border-radius:8px;">
                         <button class="btn btn-primary mt-3 w-100" onclick="importData()"><i class="fa-solid fa-file-import"></i> Restore Data</button>
                     </div>
@@ -230,7 +238,7 @@
         <table class="print-table">
             <thead>
                 <tr>
-                    <th>S.No</th><th style="text-align:left;">Product Name</th><th>Qty</th><th>Free</th><th>Div</th><th>Batch<br>Pack</th><th>Exp</th><th>HSN</th><th>N.MRP</th><th>Rate</th><th>IGST</th><th style="text-align:right;">Value</th>
+                    <th>S.No</th><th style="text-align:left;">Product Name</th><th>Pack</th><th>Batch</th><th>Exp</th><th>Qty</th><th>Free</th><th>Rate</th><th>Dis%</th><th>Taxable</th><th>IGST%</th><th style="text-align:right;">Value</th>
                 </tr>
             </thead>
             <tbody id="pCartBody"></tbody>
@@ -278,6 +286,6 @@
     </div>
 
     <div id="toast" class="toast"></div>
-    <script src="script.js?v=19"></script>
+    <script src="script.js?v=20"></script>
 </body>
 </html>

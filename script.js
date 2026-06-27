@@ -55,20 +55,20 @@ const exactMasterData = [
     { id: "M50", name: "PROMO MATERIAL", div: "-BLA", pack: "1", batch: "N/A", exp: "N/A", hsn: "39239090", oldMrp: 0, mrp: 0, rate: 0, igst: 5, qty: 1, free: 0 }
 ];
 
-// CACHE KEY v19 - Pure Bug Free Mode
-if (!localStorage.getItem("shreya_db_stock_v19")) localStorage.setItem("shreya_db_stock_v19", JSON.stringify(exactMasterData));
-if (!localStorage.getItem("shreya_db_sales_v19")) localStorage.setItem("shreya_db_sales_v19", JSON.stringify([]));
-if (!localStorage.getItem("shreya_db_counter_v19")) localStorage.setItem("shreya_db_counter_v19", "1");
+// CACHE KEY v20 - Adds Search Capability
+if (!localStorage.getItem("shreya_db_stock_v20")) localStorage.setItem("shreya_db_stock_v20", JSON.stringify(exactMasterData));
+if (!localStorage.getItem("shreya_db_sales_v20")) localStorage.setItem("shreya_db_sales_v20", JSON.stringify([]));
+if (!localStorage.getItem("shreya_db_counter_v20")) localStorage.setItem("shreya_db_counter_v20", "1");
 
-let dbStock = JSON.parse(localStorage.getItem("shreya_db_stock_v19"));
-let dbSales = JSON.parse(localStorage.getItem("shreya_db_sales_v19"));
-let invCounter = parseInt(localStorage.getItem("shreya_db_counter_v19"));
+let dbStock = JSON.parse(localStorage.getItem("shreya_db_stock_v20"));
+let dbSales = JSON.parse(localStorage.getItem("shreya_db_sales_v20"));
+let invCounter = parseInt(localStorage.getItem("shreya_db_counter_v20"));
 let currentCart = [];
 
 const formatMoney = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(num);
 const formatAmt = (num) => Number(num).toFixed(2);
 
-// ================= AUTO START (NO LOGIN) =================
+// ================= AUTO START =================
 document.addEventListener("DOMContentLoaded", () => {
     initApp();
 });
@@ -113,10 +113,10 @@ function toggleDueDate() {
     if(box) box.style.display = mode === "Pending" ? "flex" : "none";
 }
 
-// ================= INVENTORY LOGIC (100% FIXED) =================
+// ================= INVENTORY LOGIC =================
 function toggleInventoryForm() {
     let form = document.getElementById("newMedicineForm");
-    if(!form) { alert("Please ensure index.html matches this JS file."); return; }
+    if(!form) return;
     
     if(form.style.display === "none" || form.style.display === "") {
         form.style.display = "block";
@@ -140,7 +140,7 @@ function saveNewMedicine() {
     let newMrp = parseFloat(getVal("iMrp")) || 0;
     let oldMrp = parseFloat(getVal("iOldMrp")) || 0;
     
-    if(!name) { alert("Bhai, Product Name likhna zaroori hai!"); return; }
+    if(!name) { alert("Medicine name is required!"); return; }
 
     if(editId) {
         let idx = dbStock.findIndex(i => i.id === editId);
@@ -179,7 +179,7 @@ function saveNewMedicine() {
             showToast("New Medicine Saved!");
         }
     }
-    localStorage.setItem("shreya_db_stock_v19", JSON.stringify(dbStock));
+    localStorage.setItem("shreya_db_stock_v20", JSON.stringify(dbStock));
     
     document.getElementById("newMedicineForm").style.display = "none";
     updateUI(); 
@@ -217,7 +217,7 @@ function modifyMedicine(id) {
 function deleteMedicine(id) {
     if(confirm("Permanently delete this medicine?")) {
         dbStock = dbStock.filter(i => i.id !== id);
-        localStorage.setItem("shreya_db_stock_v19", JSON.stringify(dbStock));
+        localStorage.setItem("shreya_db_stock_v20", JSON.stringify(dbStock));
         updateUI(); showToast("Medicine Removed!");
     }
 }
@@ -230,7 +230,7 @@ function autoFillDetails() {
         let safeSet = (eid, val) => { let e = document.getElementById(eid); if(e) e.value = val; };
         safeSet("billMrp", item.mrp);
         safeSet("billRealRate", item.rate);
-        safeSet("billSellRate", item.mrp); // Custom sell rate equals N.MRP automatically
+        safeSet("billSellRate", item.mrp); // CUSTOM SELL RATE = N.MRP
         safeSet("billDiscount", 0);
         document.getElementById("billQty").focus();
     }
@@ -238,21 +238,21 @@ function autoFillDetails() {
 
 function addToCart() {
     let id = getVal("billItem");
-    if(!id) return alert("Pehle Medicine select karo!");
+    if(!id) return alert("Please select a Medicine!");
 
     let qty = parseFloat(getVal("billQty")) || 0;
     let free = parseInt(getVal("billFree")) || 0;
     let customRate = parseFloat(getVal("billSellRate"));
     let discount = parseFloat(getVal("billDiscount")) || 0;
 
-    if(qty <= 0 && free <= 0) return alert("Quantity ya Free Qty daalna zaroori hai!");
-    if(isNaN(customRate)) return alert("Custom Sell Rate khali nahi chhod sakte!");
+    if(qty <= 0 && free <= 0) return alert("Quantity or Free Qty is required!");
+    if(isNaN(customRate)) return alert("Sell Rate cannot be empty!");
 
     let dbItem = dbStock.find(s => s.id === id);
-    if(!dbItem) return alert("System error: Medicine not found!");
+    if(!dbItem) return alert("Medicine not found!");
     
-    if (qty > dbItem.qty) return alert(`Sirf ${dbItem.qty} regular stock bacha hai!`);
-    if (free > (dbItem.free || 0)) return alert(`Sirf ${dbItem.free || 0} free stock bacha hai!`);
+    if (qty > dbItem.qty) return alert(`Only ${dbItem.qty} regular stock left!`);
+    if (free > (dbItem.free || 0)) return alert(`Only ${dbItem.free || 0} free stock left!`);
 
     let existing = currentCart.find(i => i.id === id && i.sellRate === customRate && i.discount === discount);
     
@@ -268,8 +268,11 @@ function addToCart() {
     safeSet("billFree", 0);
     safeSet("billDiscount", 0);
     safeSet("billItem", "");
+    safeSet("posSearch", ""); // Clear search after add
     
-    renderCart(); showToast("Added to Invoice");
+    updateUI(); // Refresh list to reflect stock changes logically
+    renderCart(); 
+    showToast("Added to Invoice");
 }
 
 function removeCart(index) { currentCart.splice(index, 1); renderCart(); }
@@ -311,13 +314,13 @@ function renderCart() {
     document.getElementById("sumGrandTotal").innerText = formatMoney(grandTotal);
 }
 
-// ================= GENERATE PDF (STYLISH INVOICE) =================
+// ================= GENERATE PDF =================
 function generateBill() {
     let customer = getVal("billCustomer").trim() || "CASH SALE";
     let payMode = getVal("billPayMode");
     let dueDate = getVal("billDueDate") || "N/A";
 
-    if(currentCart.length === 0) return alert("Cart khali hai, pehle medicine add karo!");
+    if(currentCart.length === 0) return alert("Cart is empty!");
 
     let invNo = "INV-" + String(invCounter).padStart(4, '0');
     let dateStr = new Date().toLocaleDateString('en-IN');
@@ -367,9 +370,9 @@ function generateBill() {
     });
     
     invCounter++; 
-    localStorage.setItem("shreya_db_stock_v19", JSON.stringify(dbStock));
-    localStorage.setItem("shreya_db_sales_v19", JSON.stringify(dbSales));
-    localStorage.setItem("shreya_db_counter_v19", invCounter);
+    localStorage.setItem("shreya_db_stock_v20", JSON.stringify(dbStock));
+    localStorage.setItem("shreya_db_sales_v20", JSON.stringify(dbSales));
+    localStorage.setItem("shreya_db_counter_v20", invCounter);
 
     document.getElementById("pCustomer").innerText = customer;
     document.getElementById("pInvNo").innerText = invNo;
@@ -382,14 +385,14 @@ function generateBill() {
     document.getElementById("pGrandTotal").innerText = formatAmt(grandTotal);
 
     currentCart = []; document.getElementById("billCustomer").value = "";
-    updateUI(); showToast("Opening Stylish Print Dialog...");
+    updateUI(); showToast("Opening Print Dialog...");
 
     setTimeout(() => {
         window.print();
     }, 500);
 }
 
-// ================= REVERT / DELETE BILL LOGIC =================
+// ================= REVERT / DELETE LOGIC =================
 function deleteTransaction(index) {
     if(confirm("Are you sure you want to delete this bill? All items will be added back to your stock.")) {
         let sale = dbSales[index];
@@ -405,8 +408,8 @@ function deleteTransaction(index) {
         }
 
         dbSales.splice(index, 1);
-        localStorage.setItem("shreya_db_stock_v19", JSON.stringify(dbStock));
-        localStorage.setItem("shreya_db_sales_v19", JSON.stringify(dbSales));
+        localStorage.setItem("shreya_db_stock_v20", JSON.stringify(dbStock));
+        localStorage.setItem("shreya_db_sales_v20", JSON.stringify(dbSales));
         
         renderReports();
         updateUI();
@@ -435,9 +438,9 @@ function importData() {
             if (dataObj.stock && dataObj.sales) {
                 dbStock = dataObj.stock; dbSales = dataObj.sales;
                 if(dataObj.counter) invCounter = dataObj.counter;
-                localStorage.setItem("shreya_db_stock_v19", JSON.stringify(dbStock));
-                localStorage.setItem("shreya_db_sales_v19", JSON.stringify(dbSales));
-                localStorage.setItem("shreya_db_counter_v19", invCounter);
+                localStorage.setItem("shreya_db_stock_v20", JSON.stringify(dbStock));
+                localStorage.setItem("shreya_db_sales_v20", JSON.stringify(dbSales));
+                localStorage.setItem("shreya_db_counter_v20", invCounter);
                 updateUI(); showToast("Data Restored!");
             } else { showToast("Invalid Backup!"); }
         } catch(err) { showToast("Error Reading File!"); }
@@ -445,8 +448,11 @@ function importData() {
     reader.readAsText(fileInput.files[0]);
 }
 
-// ================= RENDER UI =================
+// ================= RENDER UI WITH SEARCH LOGIC =================
 function updateUI() {
+    let invSearchTerm = getVal("invSearch").toLowerCase();
+    let posSearchTerm = getVal("posSearch").toLowerCase();
+
     let invBody = document.getElementById("inventoryBody");
     let billItem = document.getElementById("billItem");
     
@@ -454,7 +460,8 @@ function updateUI() {
     if(billItem) billItem.innerHTML = '<option value="" disabled selected>-- Select Product --</option>';
 
     dbStock.forEach((item, i) => {
-        if(invBody) {
+        // Render Inventory (Applying Search Filter)
+        if(invBody && item.name.toLowerCase().includes(invSearchTerm)) {
             invBody.innerHTML += `
                 <tr>
                     <td><strong>${item.name}</strong></td>
@@ -471,7 +478,9 @@ function updateUI() {
                 </tr>
             `;
         }
-        if(billItem && (item.qty > 0 || item.free > 0)) {
+
+        // Render POS Dropdown (Applying Search Filter & Checking Stock)
+        if(billItem && (item.qty > 0 || item.free > 0) && item.name.toLowerCase().includes(posSearchTerm)) {
             billItem.innerHTML += `<option value="${item.id}">${item.name} (Pack: ${item.pack}) - Stock: ${item.qty} | Free: ${item.free || 0}</option>`;
         }
     });
@@ -512,7 +521,7 @@ function renderReports() {
     let repRev = document.getElementById("repRev");
     if(repRev) repRev.innerText = formatMoney(tRev);
     
-    let manualIgst = localStorage.getItem("shreya_igst_final_v19");
+    let manualIgst = localStorage.getItem("shreya_igst_final_v20");
     let repIgstTotal = document.getElementById("repIgstTotal");
     if(repIgstTotal) {
         if(manualIgst !== null) repIgstTotal.innerText = formatMoney(parseFloat(manualIgst)) + " (M)";
@@ -521,13 +530,13 @@ function renderReports() {
 }
 
 function editIgstTotal() {
-    let currentManual = localStorage.getItem("shreya_igst_final_v19");
+    let currentManual = localStorage.getItem("shreya_igst_final_v20");
     let input = prompt("Enter manual IGST collected amount (Leave blank to auto-calculate):", currentManual || "");
     if(input !== null) {
         if(input.trim() === "") {
-            localStorage.removeItem("shreya_igst_final_v19"); showToast("IGST set to Auto!");
+            localStorage.removeItem("shreya_igst_final_v20"); showToast("IGST set to Auto!");
         } else {
-            localStorage.setItem("shreya_igst_final_v19", parseFloat(input)); showToast("IGST Updated!");
+            localStorage.setItem("shreya_igst_final_v20", parseFloat(input)); showToast("IGST Updated!");
         }
         renderReports();
     }
@@ -543,7 +552,7 @@ function updatePaymentStatus(index) {
         } else if (newMode.toLowerCase() === 'paid') {
             sale.payMode = 'Cash/Online'; sale.dueDate = 'N/A';
         } else { return alert("Invalid Input!"); }
-        localStorage.setItem("shreya_db_sales_v19", JSON.stringify(dbSales));
+        localStorage.setItem("shreya_db_sales_v20", JSON.stringify(dbSales));
         renderReports(); showToast("Payment Status Updated!");
     }
 }
