@@ -6,12 +6,13 @@
     <title>SHREYA PHARMA - Enterprise ERP</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=20">
+    <link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
     <div class="bg-shape shape-1"></div>
     <div class="bg-shape shape-2"></div>
 
+    <!-- ================= MAIN APP ================= -->
     <div class="app-layout" id="mainApp">
         <aside class="sidebar glass-panel">
             <div class="brand">
@@ -41,6 +42,7 @@
                 </div>
             </header>
 
+            <!-- 1. POS TAB -->
             <section id="posTab" class="view-section active-view">
                 <div class="billing-container">
                     <div class="billing-left">
@@ -83,7 +85,7 @@
 
                         <div class="table-container glass-card">
                             <table>
-                                <thead><tr><th>Product Name & Pack</th><th>Qty</th><th>Free</th><th>Rate</th><th>Dis%</th><th>IGST%</th><th>Net Value</th><th>Act</th></tr></thead>
+                                <thead><tr><th>Product Name & Pack</th><th>Qty</th><th>Free</th><th>MRP</th><th>Dis%</th><th>IGST%</th><th>Rate</th><th>Act</th></tr></thead>
                                 <tbody id="cartBody"></tbody>
                             </table>
                         </div>
@@ -107,6 +109,7 @@
                 </div>
             </section>
 
+            <!-- 2. INVENTORY TAB -->
             <section id="inventoryTab" class="view-section">
                 <div class="glass-card mb-4">
                     <div class="flex-between mb-3">
@@ -127,7 +130,7 @@
                             <div class="input-box"><label>Expiry</label><input type="text" id="iExp" placeholder="MM/YY"></div>
                             <div class="input-box"><label>HSN Code</label><input type="text" id="iHsn" placeholder="HSN Code"></div>
                             <div class="input-box"><label>Stock Qty</label><input type="number" id="iQty" placeholder="0" step="any"></div>
-                            <div class="input-box"><label>Free Stock (Units)</label><input type="number" id="iFree" placeholder="0"></div>
+                            <div class="input-box"><label>Free Stock</label><input type="number" id="iFree" placeholder="0"></div>
                             <div class="input-box"><label>N.MRP (₹)</label><input type="number" step="0.01" id="iMrp" placeholder="0.00"></div>
                             <div class="input-box"><label>Base Rate (₹)</label><input type="number" step="0.01" id="iRate" placeholder="0.00"></div>
                             <div class="input-box"><label>IGST (%)</label><input type="number" step="0.01" id="iIgst" value="5.00"></div>
@@ -141,13 +144,14 @@
                 <div class="glass-card">
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>Product Name</th><th>Pack</th><th>Batch/Exp</th><th>N.MRP</th><th>Rate</th><th>Stock Qty</th><th>Free Stock</th><th>Action</th></tr></thead>
+                            <thead><tr><th>Product Name</th><th>Pack</th><th>Batch/Exp</th><th>N.MRP</th><th>Base Rate</th><th>Stock Qty</th><th>Free Stock</th><th>Action</th></tr></thead>
                             <tbody id="inventoryBody"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
+            <!-- 3. REPORTS TAB -->
             <section id="reportsTab" class="view-section">
                 <div class="kpi-grid mb-4">
                     <div class="kpi-card glass-card">
@@ -166,13 +170,14 @@
                     <h3 class="page-title mb-4" style="font-size: 20px;">Sales Ledger & Payment Tracking</h3>
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>Inv No.</th><th>Date</th><th>Customer</th><th>Taxable</th><th>IGST</th><th>Net Total</th><th>Payment Status</th><th>Due Date</th><th>Act</th></tr></thead>
+                            <thead><tr><th>Inv No.</th><th>Date</th><th>Customer</th><th>Taxable</th><th>IGST</th><th>Net Total</th><th>Status</th><th>Act (View/Edit/Del)</th></tr></thead>
                             <tbody id="reportsBody"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
+            <!-- 4. CLOUD BACKUP -->
             <section id="cloudTab" class="view-section">
                 <div class="glass-card text-center mb-4 p-5">
                     <i class="fa-solid fa-shield-halved" style="font-size: 60px; color: var(--secondary); margin-bottom: 20px;"></i>
@@ -196,6 +201,7 @@
         </main>
     </div>
 
+    <!-- ================= PREMIUM PRINT LAYOUT (PDF MATCHED) ================= -->
     <div id="printArea" class="print-container">
         
         <div class="print-header">
@@ -238,7 +244,7 @@
         <table class="print-table">
             <thead>
                 <tr>
-                    <th>S.No</th><th style="text-align:left;">Product Name</th><th>Pack</th><th>Batch</th><th>Exp</th><th>Qty</th><th>Free</th><th>Rate</th><th>Dis%</th><th>Taxable</th><th>IGST%</th><th style="text-align:right;">Value</th>
+                    <th>S.No</th><th style="text-align:left;">Product Name</th><th>Pack</th><th>Batch</th><th>Exp</th><th>Qty</th><th>Free</th><th>MRP</th><th>Dis%</th><th>Rate</th><th>IGST%</th><th style="text-align:right;">Total Value</th>
                 </tr>
             </thead>
             <tbody id="pCartBody"></tbody>
@@ -286,6 +292,6 @@
     </div>
 
     <div id="toast" class="toast"></div>
-    <script src="script.js?v=20"></script>
+    <script src="script.js?v=21"></script>
 </body>
 </html>

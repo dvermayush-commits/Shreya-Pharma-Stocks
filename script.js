@@ -55,14 +55,14 @@ const exactMasterData = [
     { id: "M50", name: "PROMO MATERIAL", div: "-BLA", pack: "1", batch: "N/A", exp: "N/A", hsn: "39239090", oldMrp: 0, mrp: 0, rate: 0, igst: 5, qty: 1, free: 0 }
 ];
 
-// CACHE KEY v20 - Adds Search Capability
-if (!localStorage.getItem("shreya_db_stock_v20")) localStorage.setItem("shreya_db_stock_v20", JSON.stringify(exactMasterData));
-if (!localStorage.getItem("shreya_db_sales_v20")) localStorage.setItem("shreya_db_sales_v20", JSON.stringify([]));
-if (!localStorage.getItem("shreya_db_counter_v20")) localStorage.setItem("shreya_db_counter_v20", "1");
+// CACHE KEY v21 - Auto Renumbering, View Bill, Edit Bill, Low Stock logic
+if (!localStorage.getItem("shreya_db_stock_v21")) localStorage.setItem("shreya_db_stock_v21", JSON.stringify(exactMasterData));
+if (!localStorage.getItem("shreya_db_sales_v21")) localStorage.setItem("shreya_db_sales_v21", JSON.stringify([]));
+if (!localStorage.getItem("shreya_db_counter_v21")) localStorage.setItem("shreya_db_counter_v21", "1");
 
-let dbStock = JSON.parse(localStorage.getItem("shreya_db_stock_v20"));
-let dbSales = JSON.parse(localStorage.getItem("shreya_db_sales_v20"));
-let invCounter = parseInt(localStorage.getItem("shreya_db_counter_v20"));
+let dbStock = JSON.parse(localStorage.getItem("shreya_db_stock_v21"));
+let dbSales = JSON.parse(localStorage.getItem("shreya_db_sales_v21"));
+let invCounter = parseInt(localStorage.getItem("shreya_db_counter_v21"));
 let currentCart = [];
 
 const formatMoney = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(num);
@@ -179,8 +179,7 @@ function saveNewMedicine() {
             showToast("New Medicine Saved!");
         }
     }
-    localStorage.setItem("shreya_db_stock_v20", JSON.stringify(dbStock));
-    
+    localStorage.setItem("shreya_db_stock_v21", JSON.stringify(dbStock));
     document.getElementById("newMedicineForm").style.display = "none";
     updateUI(); 
 }
@@ -217,7 +216,7 @@ function modifyMedicine(id) {
 function deleteMedicine(id) {
     if(confirm("Permanently delete this medicine?")) {
         dbStock = dbStock.filter(i => i.id !== id);
-        localStorage.setItem("shreya_db_stock_v20", JSON.stringify(dbStock));
+        localStorage.setItem("shreya_db_stock_v21", JSON.stringify(dbStock));
         updateUI(); showToast("Medicine Removed!");
     }
 }
@@ -230,7 +229,7 @@ function autoFillDetails() {
         let safeSet = (eid, val) => { let e = document.getElementById(eid); if(e) e.value = val; };
         safeSet("billMrp", item.mrp);
         safeSet("billRealRate", item.rate);
-        safeSet("billSellRate", item.mrp); // CUSTOM SELL RATE = N.MRP
+        safeSet("billSellRate", item.mrp); // Custom sell rate equals N.MRP automatically
         safeSet("billDiscount", 0);
         document.getElementById("billQty").focus();
     }
@@ -251,8 +250,8 @@ function addToCart() {
     let dbItem = dbStock.find(s => s.id === id);
     if(!dbItem) return alert("Medicine not found!");
     
-    if (qty > dbItem.qty) return alert(`Only ${dbItem.qty} regular stock left!`);
-    if (free > (dbItem.free || 0)) return alert(`Only ${dbItem.free || 0} free stock left!`);
+    if (qty > dbItem.qty) return alert(`Sirf ${dbItem.qty} regular stock bacha hai!`);
+    if (free > (dbItem.free || 0)) return alert(`Sirf ${dbItem.free || 0} free stock bacha hai!`);
 
     let existing = currentCart.find(i => i.id === id && i.sellRate === customRate && i.discount === discount);
     
@@ -268,9 +267,9 @@ function addToCart() {
     safeSet("billFree", 0);
     safeSet("billDiscount", 0);
     safeSet("billItem", "");
-    safeSet("posSearch", ""); // Clear search after add
+    safeSet("posSearch", ""); 
     
-    updateUI(); // Refresh list to reflect stock changes logically
+    updateUI(); 
     renderCart(); 
     showToast("Added to Invoice");
 }
@@ -297,10 +296,10 @@ function renderCart() {
                 <td><strong>${item.name}</strong><br><span style="font-size:11px; color:gray;">Pack: ${item.pack}</span></td>
                 <td><strong>${item.billQty}</strong></td>
                 <td>${item.billFree}</td>
-                <td>₹${formatAmt(item.sellRate)}</td>
+                <td>₹${formatAmt(item.sellRate)}</td> <!-- Shown as MRP now -->
                 <td style="color:var(--secondary);">${item.discount}%</td>
                 <td>${item.igst}%</td>
-                <td style="color:var(--primary); font-weight:800;">₹${formatAmt(taxableValue)}</td>
+                <td style="color:var(--primary); font-weight:800;">₹${formatAmt(taxableValue)}</td> <!-- Shown as Rate now -->
                 <td><button class="btn-icon" onclick="removeCart(${index})"><i class="fa-solid fa-trash"></i></button></td>
             </tr>
         `;
@@ -320,27 +319,65 @@ function generateBill() {
     let payMode = getVal("billPayMode");
     let dueDate = getVal("billDueDate") || "N/A";
 
-    if(currentCart.length === 0) return alert("Cart is empty!");
+    if(currentCart.length === 0) return alert("Cart khali hai, pehle medicine add karo!");
 
     let invNo = "INV-" + String(invCounter).padStart(4, '0');
     let dateStr = new Date().toLocaleDateString('en-IN');
 
-    let pBody = document.getElementById("pCartBody"); pBody.innerHTML = "";
-    let sumQty = 0, sumTaxable = 0, sumIgst = 0;
-
-    currentCart.forEach((item, i) => {
+    dbSales.push({ 
+        invNo, date: dateStr, customer, items: currentCart.length, 
+        taxable: parseFloat(document.getElementById("sumTaxable").innerText.replace(/[^0-9.-]+/g,"")), 
+        igst: parseFloat(document.getElementById("sumIgst").innerText.replace(/[^0-9.-]+/g,"")), 
+        total: parseFloat(document.getElementById("sumGrandTotal").innerText.replace(/[^0-9.-]+/g,"")),
+        payMode: payMode, dueDate: dueDate,
+        cart: [...currentCart]
+    });
+    
+    // Deduct Stock
+    currentCart.forEach(item => {
         let mItem = dbStock.find(m => m.id === item.id);
         if(mItem) {
             mItem.qty -= item.billQty; 
             mItem.free -= item.billFree; 
         }
+    });
 
+    invCounter++; 
+    localStorage.setItem("shreya_db_stock_v21", JSON.stringify(dbStock));
+    localStorage.setItem("shreya_db_sales_v21", JSON.stringify(dbSales));
+    localStorage.setItem("shreya_db_counter_v21", invCounter);
+
+    // Call View Logic to Print
+    printOutBill(dbSales[dbSales.length - 1]);
+
+    currentCart = []; document.getElementById("billCustomer").value = "";
+    updateUI();
+}
+
+// ================= AUTO RENUMBER INVOICES =================
+function renumberInvoices() {
+    dbSales.forEach((sale, index) => {
+        sale.invNo = "INV-" + String(index + 1).padStart(4, '0');
+    });
+    invCounter = dbSales.length + 1;
+}
+
+// ================= VIEW BILL LOGIC =================
+function viewBill(index) {
+    let sale = dbSales[index];
+    printOutBill(sale);
+}
+
+function printOutBill(sale) {
+    let pBody = document.getElementById("pCartBody"); pBody.innerHTML = "";
+    let sumQty = 0;
+
+    sale.cart.forEach((item, i) => {
         let baseValue = item.sellRate * item.billQty;
         let discountAmt = (baseValue * item.discount) / 100;
         let taxableValue = baseValue - discountAmt;
         let igstAmt = (taxableValue * item.igst) / 100;
-        
-        sumQty += item.billQty; sumTaxable += taxableValue; sumIgst += igstAmt;
+        sumQty += item.billQty; 
 
         pBody.innerHTML += `
             <tr>
@@ -351,50 +388,71 @@ function generateBill() {
                 <td>${item.exp}</td>
                 <td>${item.billQty}</td>
                 <td>${item.billFree}</td>
-                <td>${formatAmt(item.sellRate)}</td>
+                <td>${formatAmt(item.sellRate)}</td> <!-- MRP -->
                 <td>${item.discount}%</td>
-                <td>${formatAmt(taxableValue)}</td>
+                <td>${formatAmt(taxableValue)}</td> <!-- Rate -->
                 <td>${item.igst}%</td>
                 <td style="text-align:right;">${formatAmt(taxableValue + igstAmt)}</td>
             </tr>
         `;
     });
 
-    let grandTotal = sumTaxable + sumIgst;
-
-    dbSales.push({ 
-        invNo, date: dateStr, customer, items: currentCart.length, 
-        taxable: sumTaxable, igst: sumIgst, total: grandTotal,
-        payMode: payMode, dueDate: dueDate,
-        cart: currentCart
-    });
-    
-    invCounter++; 
-    localStorage.setItem("shreya_db_stock_v20", JSON.stringify(dbStock));
-    localStorage.setItem("shreya_db_sales_v20", JSON.stringify(dbSales));
-    localStorage.setItem("shreya_db_counter_v20", invCounter);
-
-    document.getElementById("pCustomer").innerText = customer;
-    document.getElementById("pInvNo").innerText = invNo;
-    document.getElementById("pDate").innerText = dateStr;
-    document.getElementById("pTotItems").innerText = currentCart.length;
+    document.getElementById("pCustomer").innerText = sale.customer;
+    document.getElementById("pInvNo").innerText = sale.invNo;
+    document.getElementById("pDate").innerText = sale.date;
+    document.getElementById("pTotItems").innerText = sale.cart.length;
     document.getElementById("pTotQty").innerText = sumQty;
-    document.getElementById("pPayStatus").innerText = payMode === "Pending" ? `Pending (Due: ${dueDate})` : "Paid";
-    document.getElementById("pTaxable").innerText = formatAmt(sumTaxable);
-    document.getElementById("pTotalIgst").innerText = formatAmt(sumIgst);
-    document.getElementById("pGrandTotal").innerText = formatAmt(grandTotal);
+    document.getElementById("pPayStatus").innerText = sale.payMode === "Pending" ? `Pending (Due: ${sale.dueDate})` : "Paid";
+    document.getElementById("pTaxable").innerText = formatAmt(sale.taxable);
+    document.getElementById("pTotalIgst").innerText = formatAmt(sale.igst);
+    document.getElementById("pGrandTotal").innerText = formatAmt(sale.total);
 
-    currentCart = []; document.getElementById("billCustomer").value = "";
-    updateUI(); showToast("Opening Print Dialog...");
-
-    setTimeout(() => {
-        window.print();
-    }, 500);
+    showToast("Opening View/Print Mode...");
+    setTimeout(() => { window.print(); }, 500);
 }
 
-// ================= REVERT / DELETE LOGIC =================
+// ================= EDIT BILL LOGIC =================
+function editBill(index) {
+    if(confirm("Do you want to edit this bill? It will be moved back to the POS terminal and removed from the ledger until you save it again.")) {
+        let sale = dbSales[index];
+        
+        // Revert Stock
+        if(sale.cart && sale.cart.length > 0) {
+            sale.cart.forEach(cartItem => {
+                let stockItem = dbStock.find(m => m.id === cartItem.id);
+                if(stockItem) {
+                    stockItem.qty += cartItem.billQty;
+                    if(cartItem.billFree) stockItem.free += cartItem.billFree;
+                }
+            });
+        }
+
+        // Load to POS
+        currentCart = [...sale.cart];
+        document.getElementById("billCustomer").value = sale.customer;
+        document.getElementById("billPayMode").value = sale.payMode;
+        if(sale.payMode === 'Pending') {
+            document.getElementById("dueDateBox").style.display = 'flex';
+            document.getElementById("billDueDate").value = sale.dueDate;
+        }
+
+        // Remove from Ledger & Auto-Renumber
+        dbSales.splice(index, 1);
+        renumberInvoices();
+
+        localStorage.setItem("shreya_db_stock_v21", JSON.stringify(dbStock));
+        localStorage.setItem("shreya_db_sales_v21", JSON.stringify(dbSales));
+        localStorage.setItem("shreya_db_counter_v21", invCounter);
+        
+        switchTab('pos');
+        updateUI();
+        showToast("Bill loaded for editing!");
+    }
+}
+
+// ================= DELETE LOGIC =================
 function deleteTransaction(index) {
-    if(confirm("Are you sure you want to delete this bill? All items will be added back to your stock.")) {
+    if(confirm("Are you sure you want to delete this bill? All items will be added back to your stock, and invoice numbers will auto-update.")) {
         let sale = dbSales[index];
         
         if(sale.cart && sale.cart.length > 0) {
@@ -407,13 +465,17 @@ function deleteTransaction(index) {
             });
         }
 
+        // Remove from Ledger & Auto-Renumber
         dbSales.splice(index, 1);
-        localStorage.setItem("shreya_db_stock_v20", JSON.stringify(dbStock));
-        localStorage.setItem("shreya_db_sales_v20", JSON.stringify(dbSales));
+        renumberInvoices();
+
+        localStorage.setItem("shreya_db_stock_v21", JSON.stringify(dbStock));
+        localStorage.setItem("shreya_db_sales_v21", JSON.stringify(dbSales));
+        localStorage.setItem("shreya_db_counter_v21", invCounter);
         
         renderReports();
         updateUI();
-        showToast("Bill Deleted & Stock Reverted!");
+        showToast("Bill Deleted & Invoices Auto-Updated!");
     }
 }
 
@@ -438,9 +500,9 @@ function importData() {
             if (dataObj.stock && dataObj.sales) {
                 dbStock = dataObj.stock; dbSales = dataObj.sales;
                 if(dataObj.counter) invCounter = dataObj.counter;
-                localStorage.setItem("shreya_db_stock_v20", JSON.stringify(dbStock));
-                localStorage.setItem("shreya_db_sales_v20", JSON.stringify(dbSales));
-                localStorage.setItem("shreya_db_counter_v20", invCounter);
+                localStorage.setItem("shreya_db_stock_v21", JSON.stringify(dbStock));
+                localStorage.setItem("shreya_db_sales_v21", JSON.stringify(dbSales));
+                localStorage.setItem("shreya_db_counter_v21", invCounter);
                 updateUI(); showToast("Data Restored!");
             } else { showToast("Invalid Backup!"); }
         } catch(err) { showToast("Error Reading File!"); }
@@ -448,7 +510,7 @@ function importData() {
     reader.readAsText(fileInput.files[0]);
 }
 
-// ================= RENDER UI WITH SEARCH LOGIC =================
+// ================= RENDER UI WITH LOW STOCK LOGIC =================
 function updateUI() {
     let invSearchTerm = getVal("invSearch").toLowerCase();
     let posSearchTerm = getVal("posSearch").toLowerCase();
@@ -460,8 +522,12 @@ function updateUI() {
     if(billItem) billItem.innerHTML = '<option value="" disabled selected>-- Select Product --</option>';
 
     dbStock.forEach((item, i) => {
-        // Render Inventory (Applying Search Filter)
+        // Render Inventory (Applying Search Filter & Low Stock Warning)
         if(invBody && item.name.toLowerCase().includes(invSearchTerm)) {
+            
+            let stockColor = item.qty < 3 ? "color:#ef4444; font-weight:900;" : "color:var(--primary); font-weight:800;";
+            let stockBadge = item.qty < 3 ? `<span style="background:#ef4444; color:white; padding:2px 5px; border-radius:3px; font-size:9px; margin-left:5px;">Low Stock</span>` : "";
+
             invBody.innerHTML += `
                 <tr>
                     <td><strong>${item.name}</strong></td>
@@ -469,7 +535,7 @@ function updateUI() {
                     <td>${item.batch} / ${item.exp}</td>
                     <td class="text-muted">₹${formatAmt(item.mrp)}</td>
                     <td>₹${formatAmt(item.rate)}</td>
-                    <td style="color:var(--primary); font-weight:800; font-size:16px;">${item.qty}</td>
+                    <td style="${stockColor}; font-size:16px;">${item.qty} ${stockBadge}</td>
                     <td style="color:var(--accent); font-weight:800; font-size:16px;">${item.free || 0}</td>
                     <td>
                         <button class="btn-icon edit" onclick="modifyMedicine('${item.id}')"><i class="fa-solid fa-pen"></i></button>
@@ -479,7 +545,7 @@ function updateUI() {
             `;
         }
 
-        // Render POS Dropdown (Applying Search Filter & Checking Stock)
+        // Render POS Dropdown (Applying Search Filter)
         if(billItem && (item.qty > 0 || item.free > 0) && item.name.toLowerCase().includes(posSearchTerm)) {
             billItem.innerHTML += `<option value="${item.id}">${item.name} (Pack: ${item.pack}) - Stock: ${item.qty} | Free: ${item.free || 0}</option>`;
         }
@@ -507,11 +573,9 @@ function renderReports() {
                 <td>₹${formatAmt(sale.igst)}</td>
                 <td style="color:var(--secondary); font-weight:800;">₹${formatAmt(sale.total)}</td>
                 <td>${payStatusHtml}</td>
-                <td class="text-muted">
-                    ${sale.dueDate !== "N/A" ? sale.dueDate : '-'}
-                    <button class="btn-icon edit" style="width: 25px; height: 25px; margin-left: 10px;" onclick="updatePaymentStatus(${originalIndex})"><i class="fa-solid fa-pen" style="font-size:10px;"></i></button>
-                </td>
-                <td>
+                <td style="min-width: 140px;">
+                    <button class="btn-icon" style="background:#e0e7ff; color:var(--secondary);" title="View Bill" onclick="viewBill(${originalIndex})"><i class="fa-solid fa-eye"></i></button>
+                    <button class="btn-icon edit" title="Edit Bill" onclick="editBill(${originalIndex})"><i class="fa-solid fa-pen"></i></button>
                     <button class="btn-icon" title="Delete Bill & Revert Stock" onclick="deleteTransaction(${originalIndex})"><i class="fa-solid fa-trash"></i></button>
                 </td>
             </tr>
@@ -521,7 +585,7 @@ function renderReports() {
     let repRev = document.getElementById("repRev");
     if(repRev) repRev.innerText = formatMoney(tRev);
     
-    let manualIgst = localStorage.getItem("shreya_igst_final_v20");
+    let manualIgst = localStorage.getItem("shreya_igst_final_v21");
     let repIgstTotal = document.getElementById("repIgstTotal");
     if(repIgstTotal) {
         if(manualIgst !== null) repIgstTotal.innerText = formatMoney(parseFloat(manualIgst)) + " (M)";
@@ -530,29 +594,14 @@ function renderReports() {
 }
 
 function editIgstTotal() {
-    let currentManual = localStorage.getItem("shreya_igst_final_v20");
+    let currentManual = localStorage.getItem("shreya_igst_final_v21");
     let input = prompt("Enter manual IGST collected amount (Leave blank to auto-calculate):", currentManual || "");
     if(input !== null) {
         if(input.trim() === "") {
-            localStorage.removeItem("shreya_igst_final_v20"); showToast("IGST set to Auto!");
+            localStorage.removeItem("shreya_igst_final_v21"); showToast("IGST set to Auto!");
         } else {
-            localStorage.setItem("shreya_igst_final_v20", parseFloat(input)); showToast("IGST Updated!");
+            localStorage.setItem("shreya_igst_final_v21", parseFloat(input)); showToast("IGST Updated!");
         }
         renderReports();
-    }
-}
-
-function updatePaymentStatus(index) {
-    let sale = dbSales[index];
-    let newMode = prompt(`Update Payment Status for ${sale.invNo} (Type 'Paid' or 'Pending'):`, sale.payMode === 'Pending' ? 'Pending' : 'Paid');
-    if (newMode) {
-        if (newMode.toLowerCase() === 'pending') {
-            let newDate = prompt(`Enter Due Date for ${sale.invNo} (YYYY-MM-DD):`, sale.dueDate !== 'N/A' ? sale.dueDate : '');
-            sale.payMode = 'Pending'; sale.dueDate = newDate || 'N/A';
-        } else if (newMode.toLowerCase() === 'paid') {
-            sale.payMode = 'Cash/Online'; sale.dueDate = 'N/A';
-        } else { return alert("Invalid Input!"); }
-        localStorage.setItem("shreya_db_sales_v20", JSON.stringify(dbSales));
-        renderReports(); showToast("Payment Status Updated!");
     }
 }
