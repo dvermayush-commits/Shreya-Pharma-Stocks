@@ -6,7 +6,7 @@
     <title>SHREYA PHARMA - Enterprise ERP</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=21">
+    <link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
     <div class="bg-shape shape-1"></div>
@@ -14,6 +14,7 @@
 
     <!-- ================= MAIN APP ================= -->
     <div class="app-layout" id="mainApp">
+        <!-- Sidebar -->
         <aside class="sidebar glass-panel">
             <div class="brand">
                 <div class="brand-icon"><i class="fa-solid fa-staff-snake"></i></div>
@@ -27,6 +28,7 @@
             </nav>
         </aside>
 
+        <!-- Workspace -->
         <main class="workspace">
             <header class="topbar glass-panel mb-4">
                 <h1 class="page-title" id="pageTitle">Billing Terminal</h1>
@@ -46,9 +48,10 @@
             <section id="posTab" class="view-section active-view">
                 <div class="billing-container">
                     <div class="billing-left">
+                        
                         <div class="glass-card mb-3">
                             <h3 class="mb-3 border-bottom pb-2">Invoice Details</h3>
-                            <div class="grid-3">
+                            <div class="grid-4">
                                 <div class="input-box" style="grid-column: span 2;"><label>Customer Name</label><input type="text" id="billCustomer" placeholder="Cash Sale / Name"></div>
                                 <div class="input-box"><label>Payment Mode</label>
                                     <select id="billPayMode" onchange="toggleDueDate()">
@@ -56,7 +59,18 @@
                                         <option value="Pending">Credit / Pending (Delay)</option>
                                     </select>
                                 </div>
-                                <div class="input-box" id="dueDateBox" style="display:none; grid-column: span 3;"><label class="text-danger">Payment Due Date</label><input type="date" id="billDueDate"></div>
+                                <div class="input-box" id="dueDateBox" style="display:none;"><label class="text-danger">Due Date</label><input type="date" id="billDueDate"></div>
+                            </div>
+                            
+                            <div class="grid-4 mt-3 pt-3 border-top">
+                                <div class="input-box" style="grid-column: span 2;">
+                                    <label style="color:var(--secondary);">Invoice Number (Edit Lock)</label>
+                                    <input type="text" id="posInvNo" placeholder="Auto Generate (Leave Blank)" style="background: rgba(37, 99, 235, 0.05);">
+                                </div>
+                                <div class="input-box" style="grid-column: span 2;">
+                                    <label style="color:var(--secondary);">Bill Date (Edit Lock)</label>
+                                    <input type="date" id="posDate" style="background: rgba(37, 99, 235, 0.05);">
+                                </div>
                             </div>
                         </div>
 
@@ -83,12 +97,35 @@
                             </div>
                         </div>
 
-                        <div class="table-container glass-card">
+                        <div class="table-container glass-card mb-3">
                             <table>
                                 <thead><tr><th>Product Name & Pack</th><th>Qty</th><th>Free</th><th>MRP</th><th>Dis%</th><th>IGST%</th><th>Rate</th><th>Act</th></tr></thead>
                                 <tbody id="cartBody"></tbody>
                             </table>
                         </div>
+                        
+                        <!-- DYNAMIC DISCOUNT CHEAT SHEET PANEL -->
+                        <div class="glass-card discount-panel">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
+                                <h3 style="font-size:16px; color:var(--accent); margin:0;"><i class="fa-solid fa-tags"></i> Premium Discount Guide</h3>
+                                <input type="text" id="cheatSearch" placeholder="🔍 Search Medicine..." onkeyup="renderCheatSheet()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; outline: none; font-size: 12px; width: 40%;">
+                            </div>
+                            <div style="max-height: 250px; overflow-y: auto; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <table class="cheat-table">
+                                    <thead style="position: sticky; top: 0; background: var(--primary); color: white; z-index: 10;">
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Medicine Name</th>
+                                            <th>MRP</th>
+                                            <th>Target Rate</th>
+                                            <th>Discount %</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cheatSheetBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
 
                     <div class="billing-right">
@@ -96,7 +133,7 @@
                             <h3 class="border-bottom pb-2 mb-3">Bill Summary</h3>
                             <div class="sum-row"><span>Total Items:</span><h4 id="sumItems">0</h4></div>
                             <div class="sum-row"><span>Total Qty:</span><h4 id="sumQty">0</h4></div>
-                            <div class="sum-row mt-3"><span>Taxable Value:</span><h4 id="sumTaxable" style="color:var(--text-main);">₹0.00</h4></div>
+                            <div class="sum-row mt-3"><span>Rate (Taxable):</span><h4 id="sumTaxable" style="color:var(--text-main);">₹0.00</h4></div>
                             <div class="sum-row"><span>Total IGST (5%):</span><h4 id="sumIgst" style="color:var(--danger);">₹0.00</h4></div>
                             <div class="sum-divider"></div>
                             <div class="grand-total-display">
@@ -131,9 +168,13 @@
                             <div class="input-box"><label>HSN Code</label><input type="text" id="iHsn" placeholder="HSN Code"></div>
                             <div class="input-box"><label>Stock Qty</label><input type="number" id="iQty" placeholder="0" step="any"></div>
                             <div class="input-box"><label>Free Stock</label><input type="number" id="iFree" placeholder="0"></div>
+                            
+                            <!-- Base Rate Added Here -->
                             <div class="input-box"><label>N.MRP (₹)</label><input type="number" step="0.01" id="iMrp" placeholder="0.00"></div>
-                            <div class="input-box"><label>Base Rate (₹)</label><input type="number" step="0.01" id="iRate" placeholder="0.00"></div>
+                            <div class="input-box"><label>Base Rate (₹)</label><input type="number" step="0.01" id="iBaseRate" placeholder="0.00"></div>
+                            <div class="input-box"><label>Target Rate (₹)</label><input type="number" step="0.01" id="iRate" placeholder="0.00"></div>
                             <div class="input-box"><label>IGST (%)</label><input type="number" step="0.01" id="iIgst" value="5.00"></div>
+                            
                             <div class="input-box" style="grid-column: span 4;">
                                 <button class="btn btn-success w-100" id="saveMedBtn" onclick="saveNewMedicine()"><i class="fa-solid fa-save"></i> Save Database</button>
                             </div>
@@ -144,7 +185,7 @@
                 <div class="glass-card">
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>Product Name</th><th>Pack</th><th>Batch/Exp</th><th>N.MRP</th><th>Base Rate</th><th>Stock Qty</th><th>Free Stock</th><th>Action</th></tr></thead>
+                            <thead><tr><th>S.No</th><th>Product Name</th><th>Pack</th><th>Batch/Exp</th><th>N.MRP</th><th>Base Rate</th><th>Target Rate</th><th>Stock Qty</th><th>Free Stock</th><th>Action</th></tr></thead>
                             <tbody id="inventoryBody"></tbody>
                         </table>
                     </div>
@@ -170,7 +211,7 @@
                     <h3 class="page-title mb-4" style="font-size: 20px;">Sales Ledger & Payment Tracking</h3>
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>Inv No.</th><th>Date</th><th>Customer</th><th>Taxable</th><th>IGST</th><th>Net Total</th><th>Status</th><th>Act (View/Edit/Del)</th></tr></thead>
+                            <thead><tr><th>Inv No.</th><th>Date</th><th>Customer</th><th>Rate (Taxable)</th><th>IGST</th><th>Net Total</th><th>Status & Due Date</th><th>Act (View/Edit/Del)</th></tr></thead>
                             <tbody id="reportsBody"></tbody>
                         </table>
                     </div>
@@ -201,97 +242,129 @@
         </main>
     </div>
 
-    <!-- ================= PREMIUM PRINT LAYOUT (PDF MATCHED) ================= -->
+    <!-- ================= PRINT AREA ================= -->
     <div id="printArea" class="print-container">
         
-        <div class="print-header">
-            <div class="print-logo-section">
-                <img src="logo.jpg" alt="Logo">
-                <div class="print-company-info">
-                    <h2>SHREYA PHARMA</h2>
-                    <p>PARIKHRA TIKHAMPUR, BALLIA, UTTAR PRADESH</p>
-                    <p>Phone: +91 9807671771, +91 8299347553, +91 6393705772</p>
-                    <p><strong>D.L NO.:</strong> UP6020B000191 UP6020B000192</p>
-                    <p><strong>GSTIN:</strong> </p>
+        <!-- 1. INVOICE TEMPLATE (Shown Normally) -->
+        <div id="invoicePrint">
+            <div class="print-header">
+                <div class="print-logo-section">
+                    <img src="logo.jpg" alt="Logo">
+                    <div class="print-company-info">
+                        <h2>SHREYA PHARMA</h2>
+                        <p>PARIKHRA TIKHAMPUR, BALLIA, UTTAR PRADESH</p>
+                        <p>Phone: +91 9807671771, +91 8299347553, +91 6393705772</p>
+                        <p><strong>D.L NO.:</strong> UP6020B000191 UP6020B000192</p>
+                        <p><strong>GSTIN:</strong> </p>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="print-qr-badge-section">
-                <div class="qr-box-top">
-                    <img src="IMG_4727 QR.jpg" alt="QR Code">
-                    <p>Scan to Pay</p>
-                </div>
-                <div class="print-invoice-badge">
-                    <h1>TAX INVOICE</h1>
-                </div>
-            </div>
-        </div>
-        
-        <div class="print-customer-row">
-            <div class="billed-to">
-                <p class="section-title">Details of Receiver / Billed to:</p>
-                <h3 id="pCustomer" style="margin: 3px 0 0 0; font-size: 16px;"></h3>
-            </div>
-            <div class="inv-details">
-                <table class="inv-info-table">
-                    <tr><td><strong>Invoice No.</strong></td><td>: <span id="pInvNo"></span></td></tr>
-                    <tr><td><strong>Date</strong></td><td>: <span id="pDate"></span></td></tr>
-                    <tr><td><strong>Place of Supply</strong></td><td>: UTTAR PRADESH</td></tr>
-                </table>
-            </div>
-        </div>
-
-        <table class="print-table">
-            <thead>
-                <tr>
-                    <th>S.No</th><th style="text-align:left;">Product Name</th><th>Pack</th><th>Batch</th><th>Exp</th><th>Qty</th><th>Free</th><th>MRP</th><th>Dis%</th><th>Rate</th><th>IGST%</th><th style="text-align:right;">Total Value</th>
-                </tr>
-            </thead>
-            <tbody id="pCartBody"></tbody>
-        </table>
-
-        <div class="print-footer-grid">
-            <div class="print-terms-qr">
-                <div>
-                    <p><strong>TOTAL ITEMS:</strong> <span id="pTotItems"></span></p>
-                    <p><strong>TOTAL ITEMS QTY.:</strong> <span id="pTotQty"></span></p>
-                    <p><strong>Payment Status:</strong> <span id="pPayStatus"></span></p>
-                    <div style="margin-top: 15px; font-size: 10px; color: #333;">
-                        <p style="font-weight: bold; font-size: 12px; margin-bottom: 3px;">Terms & Conditions</p>
-                        <p>1. Goods once sold will not be taken back or exchanged.</p>
-                        <p>2. Bills not paid due date will attract 24% interest.</p>
-                        <p>3. All disputes subject to Jurisdiction only.</p>
+                
+                <div class="print-qr-badge-section">
+                    <div class="qr-box-top">
+                        <img src="IMG_4727 QR.jpg" alt="QR Code">
+                        <p>Scan to Pay</p>
+                    </div>
+                    <div class="print-invoice-badge">
+                        <h1>TAX INVOICE</h1>
                     </div>
                 </div>
             </div>
             
-            <div class="grand-total-box">
-                <table class="mini-total-table">
-                    <tr><td>TAXABLE VALUE:</td><td style="text-align:right;" id="pTaxable">0.00</td></tr>
-                    <tr><td>TOTAL IGST:</td><td style="text-align:right;" id="pTotalIgst">0.00</td></tr>
-                    <tr class="gt-row"><td style="padding-top:10px;">GRAND TOTAL:</td><td style="text-align:right; padding-top:10px;" id="pGrandTotal">0.00</td></tr>
-                </table>
+            <div class="print-customer-row">
+                <div class="billed-to">
+                    <p class="section-title">Details of Receiver / Billed to:</p>
+                    <h3 id="pCustomer" style="margin: 3px 0 0 0; font-size: 16px;"></h3>
+                </div>
+                <div class="inv-details">
+                    <table class="inv-info-table">
+                        <tr><td><strong>Invoice No.</strong></td><td>: <span id="pInvNo"></span></td></tr>
+                        <tr><td><strong>Date</strong></td><td>: <span id="pDate"></span></td></tr>
+                        <tr><td><strong>Place of Supply</strong></td><td>: UTTAR PRADESH</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <table class="print-table">
+                <thead>
+                    <tr>
+                        <th>S.No</th><th style="text-align:left;">Product Name</th><th>Pack</th><th>Batch</th><th>Exp</th><th>Qty</th><th>Free</th><th>MRP</th><th>Dis%</th><th>Rate</th><th>IGST%</th><th style="text-align:right;">Total Value</th>
+                    </tr>
+                </thead>
+                <tbody id="pCartBody"></tbody>
+            </table>
+
+            <div class="print-footer-grid">
+                <div class="print-terms-qr">
+                    <div>
+                        <p><strong>TOTAL ITEMS:</strong> <span id="pTotItems"></span></p>
+                        <p><strong>TOTAL ITEMS QTY.:</strong> <span id="pTotQty"></span></p>
+                        <p><strong>Payment Status:</strong> <span id="pPayStatus"></span></p>
+                        <div style="margin-top: 15px; font-size: 10px; color: #333;">
+                            <p style="font-weight: bold; font-size: 12px; margin-bottom: 3px;">Terms & Conditions</p>
+                            <p>1. Goods once sold will not be taken back or exchanged.</p>
+                            <p>2. Bills not paid due date will attract 24% interest.</p>
+                            <p>3. All disputes subject to Jurisdiction only.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grand-total-box">
+                    <table class="mini-total-table">
+                        <tr><td>TOTAL RATE (Taxable):</td><td style="text-align:right;" id="pTaxable">0.00</td></tr>
+                        <tr><td>TOTAL IGST:</td><td style="text-align:right;" id="pTotalIgst">0.00</td></tr>
+                        <tr class="gt-row"><td style="padding-top:10px;">GRAND TOTAL:</td><td style="text-align:right; padding-top:10px;" id="pGrandTotal">0.00</td></tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="signature-row" style="display: flex; justify-content: space-between; margin-top: 40px; font-size: 12px; font-weight: bold;">
+                <div style="text-align: left;"><br><br><br><p>Checked By</p></div>
+                <div style="text-align: right;"><p>For <strong>SHREYA PHARMA</strong></p><br><br><br><p>Authorised Signatory</p></div>
+            </div>
+            <div class="print-footer-credit"><p>Software Designed & Developed by KRISHNA VERMA</p></div>
+        </div>
+
+        <!-- 2. GENTLE OVERDUE NOTICE TEMPLATE (Fixed to 1 Page & Compact) -->
+        <div id="noticePrint" style="display:none; padding: 25px; border: 2px solid #0f172a; border-radius: 12px; height: 95vh; box-sizing: border-box; page-break-inside: avoid; margin: 0 auto; width: 100%;">
+            <div style="text-align: center; border-bottom: 2px dashed #cbd5e1; padding-bottom: 15px; margin-bottom: 20px;">
+                <img src="logo.jpg" alt="Logo" style="width: 100px; margin-bottom: 5px;">
+                <h1 style="color: var(--primary); font-family: 'Playfair Display', serif; font-size: 24px; margin: 0; letter-spacing: 1.5px;">GENTLE PAYMENT REMINDER</h1>
+            </div>
+            
+            <div style="font-size: 14px; line-height: 1.6; color: #1e293b;">
+                <p>Dear <strong><span id="nCustomer" style="font-size: 16px; color: var(--secondary);"></span></strong>,</p>
+                <p>Greetings from <strong>SHREYA PHARMA</strong>! We hope you are doing well.</p>
+                <p>This is a friendly reminder that the payment for your recent purchase is currently past its due date. Please find the details of the outstanding invoice below:</p>
+                
+                <div style="background: #f8fafc; padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 5px solid var(--danger);">
+                    <table style="width: 100%; text-align: left; font-size: 14px;">
+                        <tr><th style="padding: 6px 0; width: 40%;">Invoice Number:</th><td><strong id="nInvNo"></strong></td></tr>
+                        <tr><th style="padding: 6px 0;">Invoice Date:</th><td id="nDate"></td></tr>
+                        <tr><th style="padding: 6px 0; color: var(--danger);">Due Date:</th><td style="color: var(--danger); font-weight: bold;" id="nDueDate"></td></tr>
+                        <tr><th style="padding: 6px 0; font-size: 18px;">Total Amount Due:</th><td style="font-size: 18px; color: var(--secondary); font-weight: 900;" id="nAmount"></td></tr>
+                    </table>
+                </div>
+                
+                <p>We kindly request you to clear this outstanding balance at your earliest convenience to maintain a smooth business relationship. If you have already processed the payment, please disregard this notice.</p>
+                <p>Thank you for your continued trust and business!</p>
+            </div>
+            
+            <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end;">
+                <div style="text-align: center;">
+                    <img src="IMG_4727 QR.jpg" alt="QR" style="width: 80px; border: 2px solid var(--secondary); border-radius: 8px; padding: 3px;">
+                    <p style="font-size: 11px; font-weight: bold; margin-top: 4px; color: var(--secondary);">Scan to Pay Instantly</p>
+                </div>
+                <div style="text-align: right; font-size: 13px;">
+                    <p>Warm Regards,</p>
+                    <p style="margin-top: 5px; font-size: 14px;"><strong>SHREYA PHARMA</strong></p>
+                    <p style="color: #64748b; font-size: 11px;">Phone: +91 9807671771</p>
+                </div>
             </div>
         </div>
-        
-        <div class="signature-row" style="display: flex; justify-content: space-between; margin-top: 40px; font-size: 12px; font-weight: bold;">
-            <div style="text-align: left;">
-                <br><br><br>
-                <p>Checked By</p>
-            </div>
-            <div style="text-align: right;">
-                <p>For <strong>SHREYA PHARMA</strong></p>
-                <br><br><br>
-                <p>Authorised Signatory</p>
-            </div>
-        </div>
-        
-        <div class="print-footer-credit">
-            <p>Software Designed & Developed by KRISHNA VERMA</p>
-        </div>
+
     </div>
 
     <div id="toast" class="toast"></div>
-    <script src="script.js?v=21"></script>
+    <script src="script.js?v=25"></script>
 </body>
 </html>
