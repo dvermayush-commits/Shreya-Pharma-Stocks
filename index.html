@@ -6,7 +6,7 @@
     <title>SHREYA PHARMA - Enterprise ERP</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=25">
+    <link rel="stylesheet" href="style.css?v=26">
 </head>
 <body>
     <div class="bg-shape shape-1"></div>
@@ -14,7 +14,6 @@
 
     <!-- ================= MAIN APP ================= -->
     <div class="app-layout" id="mainApp">
-        <!-- Sidebar -->
         <aside class="sidebar glass-panel">
             <div class="brand">
                 <div class="brand-icon"><i class="fa-solid fa-staff-snake"></i></div>
@@ -28,7 +27,6 @@
             </nav>
         </aside>
 
-        <!-- Workspace -->
         <main class="workspace">
             <header class="topbar glass-panel mb-4">
                 <h1 class="page-title" id="pageTitle">Billing Terminal</h1>
@@ -84,9 +82,9 @@
                                     </div>
                                 </div>
                                 <div class="input-box"><label>N.MRP (₹)</label><input type="text" id="billMrp" class="readonly-input" readonly></div>
-                                <div class="input-box"><label>Default Rate</label><input type="text" id="billRealRate" class="readonly-input" readonly></div>
+                                <div class="input-box"><label>Target Rate</label><input type="text" id="billRealRate" class="readonly-input" readonly></div>
                                 
-                                <div class="input-box"><label>Quantity (Can be 0.5)</label><input type="number" id="billQty" value="1" min="0" step="any"></div>
+                                <div class="input-box"><label>Qty (Can be 0.5)</label><input type="number" id="billQty" value="1" min="0" step="any"></div>
                                 <div class="input-box"><label>Free Qty</label><input type="number" id="billFree" value="0" min="0"></div>
                                 <div class="input-box"><label class="text-gradient">Discount (%)</label><input type="number" id="billDiscount" value="0" min="0" max="100" class="highlight-input"></div>
                                 <div class="input-box"><label class="text-gradient">Custom Sell Rate</label><input type="number" id="billSellRate" step="0.01" class="highlight-input"></div>
@@ -104,7 +102,6 @@
                             </table>
                         </div>
                         
-                        <!-- DYNAMIC DISCOUNT CHEAT SHEET PANEL -->
                         <div class="glass-card discount-panel">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #e2e8f0;">
                                 <h3 style="font-size:16px; color:var(--accent); margin:0;"><i class="fa-solid fa-tags"></i> Premium Discount Guide</h3>
@@ -167,14 +164,11 @@
                             <div class="input-box"><label>Expiry</label><input type="text" id="iExp" placeholder="MM/YY"></div>
                             <div class="input-box"><label>HSN Code</label><input type="text" id="iHsn" placeholder="HSN Code"></div>
                             <div class="input-box"><label>Stock Qty</label><input type="number" id="iQty" placeholder="0" step="any"></div>
-                            <div class="input-box"><label>Free Stock</label><input type="number" id="iFree" placeholder="0"></div>
-                            
-                            <!-- Base Rate Added Here -->
+                            <div class="input-box"><label>Free Stock (Units)</label><input type="number" id="iFree" placeholder="0"></div>
                             <div class="input-box"><label>N.MRP (₹)</label><input type="number" step="0.01" id="iMrp" placeholder="0.00"></div>
                             <div class="input-box"><label>Base Rate (₹)</label><input type="number" step="0.01" id="iBaseRate" placeholder="0.00"></div>
                             <div class="input-box"><label>Target Rate (₹)</label><input type="number" step="0.01" id="iRate" placeholder="0.00"></div>
                             <div class="input-box"><label>IGST (%)</label><input type="number" step="0.01" id="iIgst" value="5.00"></div>
-                            
                             <div class="input-box" style="grid-column: span 4;">
                                 <button class="btn btn-success w-100" id="saveMedBtn" onclick="saveNewMedicine()"><i class="fa-solid fa-save"></i> Save Database</button>
                             </div>
@@ -245,7 +239,6 @@
     <!-- ================= PRINT AREA ================= -->
     <div id="printArea" class="print-container">
         
-        <!-- 1. INVOICE TEMPLATE (Shown Normally) -->
         <div id="invoicePrint">
             <div class="print-header">
                 <div class="print-logo-section">
@@ -258,15 +251,9 @@
                         <p><strong>GSTIN:</strong> </p>
                     </div>
                 </div>
-                
                 <div class="print-qr-badge-section">
-                    <div class="qr-box-top">
-                        <img src="IMG_4727 QR.jpg" alt="QR Code">
-                        <p>Scan to Pay</p>
-                    </div>
-                    <div class="print-invoice-badge">
-                        <h1>TAX INVOICE</h1>
-                    </div>
+                    <div class="qr-box-top"><img src="IMG_4727 QR.jpg" alt="QR Code"><p>Scan to Pay</p></div>
+                    <div class="print-invoice-badge"><h1>TAX INVOICE</h1></div>
                 </div>
             </div>
             
@@ -324,7 +311,6 @@
             <div class="print-footer-credit"><p>Software Designed & Developed by KRISHNA VERMA</p></div>
         </div>
 
-        <!-- 2. GENTLE OVERDUE NOTICE TEMPLATE (Fixed to 1 Page & Compact) -->
         <div id="noticePrint" style="display:none; padding: 25px; border: 2px solid #0f172a; border-radius: 12px; height: 95vh; box-sizing: border-box; page-break-inside: avoid; margin: 0 auto; width: 100%;">
             <div style="text-align: center; border-bottom: 2px dashed #cbd5e1; padding-bottom: 15px; margin-bottom: 20px;">
                 <img src="logo.jpg" alt="Logo" style="width: 100px; margin-bottom: 5px;">
@@ -365,6 +351,6 @@
     </div>
 
     <div id="toast" class="toast"></div>
-    <script src="script.js?v=25"></script>
+    <script src="script.js?v=26"></script>
 </body>
 </html>
